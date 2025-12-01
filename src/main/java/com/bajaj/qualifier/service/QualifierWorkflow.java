@@ -44,10 +44,11 @@ public class QualifierWorkflow implements ApplicationRunner {
             log.error("Invalid webhook response received, terminating workflow");
             return;
         }
-        log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), maskToken(webhookResponse.accessToken()));
+        // log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), maskToken(webhookResponse.accessToken()));
+        log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), webhookResponse.accessToken());
 
-        // submitSolution(webhookResponse, finalQuery);
-        log.info("Solution prepared but submission skipped for qualifier purposes");
+        // 
+        submitSolution(webhookResponse, finalQuery);
     }
 
     private GenerateWebhookResponse requestWebhook() {
@@ -56,7 +57,7 @@ public class QualifierWorkflow implements ApplicationRunner {
             headers.setContentType(MediaType.APPLICATION_JSON);
             GenerateWebhookRequest payload = new GenerateWebhookRequest(
                     "Mohd Umar Khan",
-                    "22BCE07693",
+                    "22BCE7693",
                     "umar8931008277@gmail.com"
             );
             ResponseEntity<GenerateWebhookResponse> response = restTemplate.postForEntity(
@@ -79,7 +80,7 @@ public class QualifierWorkflow implements ApplicationRunner {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.set("Authorization", "Token " + response.accessToken());
+            headers.setBearerAuth(response.accessToken());
             FinalQueryRequest payload = new FinalQueryRequest(finalQuery);
             ResponseEntity<String> submissionResponse = restTemplate.postForEntity(
                     response.webhook(),
