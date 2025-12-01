@@ -25,8 +25,8 @@ public class QualifierWorkflow implements ApplicationRunner {
     private final SolutionStorageService solutionStorageService;
 
     public QualifierWorkflow(RestTemplate restTemplate,
-                             SqlQueryProvider sqlQueryProvider,
-                             SolutionStorageService solutionStorageService) {
+            SqlQueryProvider sqlQueryProvider,
+            SolutionStorageService solutionStorageService) {
         this.restTemplate = restTemplate;
         this.sqlQueryProvider = sqlQueryProvider;
         this.solutionStorageService = solutionStorageService;
@@ -44,10 +44,11 @@ public class QualifierWorkflow implements ApplicationRunner {
             log.error("Invalid webhook response received, terminating workflow");
             return;
         }
-        // log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), maskToken(webhookResponse.accessToken()));
+        // log.info("Received webhook: {} and accessToken: {}",
+        // webhookResponse.webhook(), maskToken(webhookResponse.accessToken()));
         log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), webhookResponse.accessToken());
 
-        // 
+        //
         submitSolution(webhookResponse, finalQuery);
     }
 
@@ -58,13 +59,11 @@ public class QualifierWorkflow implements ApplicationRunner {
             GenerateWebhookRequest payload = new GenerateWebhookRequest(
                     "Mohd Umar Khan",
                     "22BCE7693",
-                    "umar8931008277@gmail.com"
-            );
+                    "umar8931008277@gmail.com");
             ResponseEntity<GenerateWebhookResponse> response = restTemplate.postForEntity(
                     WEBHOOK_GENERATOR_URL,
                     new HttpEntity<>(payload, headers),
-                    GenerateWebhookResponse.class
-            );
+                    GenerateWebhookResponse.class);
             if (response.getStatusCode().is2xxSuccessful()) {
                 log.info("Webhook generated successfully");
                 return response.getBody();
@@ -77,25 +76,37 @@ public class QualifierWorkflow implements ApplicationRunner {
     }
 
     private void submitSolution(GenerateWebhookResponse response, String finalQuery) {
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            headers.setBearerAuth(response.accessToken());
-            FinalQueryRequest payload = new FinalQueryRequest(finalQuery);
-            ResponseEntity<String> submissionResponse = restTemplate.postForEntity(
-                    response.webhook(),
-                    new HttpEntity<>(payload, headers),
-                    String.class
-            );
-            if (submissionResponse.getStatusCode().is2xxSuccessful()) {
-                log.info("Final SQL query submitted successfully");
-            } else {
-                log.error("Submission failed with status: {}", submissionResponse.getStatusCode());
-            }
-        } catch (Exception ex) {
-            log.error("Exception during solution submission", ex);
+    try {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        // 1. MATCH POSTMAN: Use "Mozilla/5.0" to look like a browser
+        headers.add("User-Agent", "Mozilla/5.0");
+
+        // 2. MATCH POSTMAN: Send RAW token (No "Bearer" prefix)
+        // We use .set() instead of .setBearerAuth() to avoid adding the "Bearer " prefix automatically.
+        headers.set("Authorization", response.accessToken());
+
+        // Prepare payload
+        FinalQueryRequest payload = new FinalQueryRequest(finalQuery);
+        
+        // Send request
+        ResponseEntity<String> submissionResponse = restTemplate.postForEntity(
+                response.webhook(),
+                new HttpEntity<>(payload, headers),
+                String.class
+        );
+
+        if (submissionResponse.getStatusCode().is2xxSuccessful()) {
+            log.info("✅ SUCCESS! Final SQL query submitted successfully.");
+            log.info("Response: {}", submissionResponse.getBody());
+        } else {
+            log.error("❌ Submission failed with status: {}", submissionResponse.getStatusCode());
         }
+    } catch (Exception ex) {
+        log.error("Exception during solution submission", ex);
     }
+}
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();

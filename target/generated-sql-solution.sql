@@ -1,4 +1,4 @@
--- Generated at 2025-12-01T17:19:33.217239799
+-- Generated at 2025-12-01T17:35:49.925712964
 WITH filtered_payments AS (
     SELECT p.emp_id,
            SUM(p.amount) AS total_salary
