@@ -44,9 +44,9 @@ public class QualifierWorkflow implements ApplicationRunner {
             log.error("Invalid webhook response received, terminating workflow");
             return;
         }
-        // log.info("Received webhook: {} and accessToken: {}",
-        // webhookResponse.webhook(), maskToken(webhookResponse.accessToken()));
-        log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), webhookResponse.accessToken());
+        log.info("Received webhook: {} and accessToken: {}",
+        webhookResponse.webhook(), maskToken(webhookResponse.accessToken()));
+        // log.info("Received webhook: {} and accessToken: {}", webhookResponse.webhook(), webhookResponse.accessToken());
 
         //
         submitSolution(webhookResponse, finalQuery);
